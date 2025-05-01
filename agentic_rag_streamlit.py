@@ -44,7 +44,27 @@ vector_store = SupabaseVectorStore(
 llm = ChatTogether(temperature=0, model='meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', max_tokens=200)
 
 # pulling prompt from hub
-prompt = hub.pull("hwchase17/openai-functions-agent")
+# prompt = hub.pull("hwchase17/openai-functions-agent")
+
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
+# Custom System Message
+system_message = SystemMessage(content="""
+You are TCE's official chatbot, providing reliable and verified information only about Thiagarajar College of Engineering.
+If a question is outside your knowledge, say 'I don’t know' instead of guessing.
+If relevant, use the 'retrieve' function to fetch factual data from the college's database.
+""")
+
+# Creating a ChatPromptTemplate with agent_scratchpad
+prompt = ChatPromptTemplate.from_messages([
+    system_message,
+    MessagesPlaceholder(variable_name="chat_history"),  # Maintains conversation history
+    ("user", "{input}"),  # User input
+    MessagesPlaceholder(variable_name="agent_scratchpad")  # Required for tool use
+])
+
 
 
 # creating the retriever tool
@@ -69,7 +89,22 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # initiating streamlit app
 st.set_page_config(page_title="TCE Chatbot", page_icon="🤖")
-st.title("TCE Chatbot")
+
+
+# College logo file path (local) or URL
+logo_path = "tcelogo.png"  # If it's a local file
+
+# Create layout for logo and title
+col1, col2 = st.columns([0.2, 0.8])  # Adjust proportions if needed
+
+with col1:
+    st.image(logo_path, use_container_width=True)  # New recommended parameter
+
+with col2:
+    st.markdown("<h1 style='margin-top: 10px;'>TCE Chatbot</h1>", unsafe_allow_html=True)  # Proper alignment
+
+
+
 
 # initialize chat history
 if "messages" not in st.session_state:
